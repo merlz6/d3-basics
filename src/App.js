@@ -1,26 +1,37 @@
 import React, {useRef, useEffect, useState} from 'react';
 import './App.css';
-import {select, line, curveCardinal, axisBottom, axisRight, scaleLinear} from 'd3';
+import {select, line, curveCardinal, axisBottom, axisRight, scaleLinear, scaleBand} from 'd3';
 
 function App() {
   const svgRef = useRef()
-  const [data, setData] = useState([25,30,45,60,50, 60])
+  const [data, setData] = useState([25,35,45,50,20, 40,60])
 
   useEffect(()=> {
     console.log(svgRef)
     const svg = select(svgRef.current);
 
-    //domain is to scale up or down chart going from 0 to data.length - 1 , the range is going from 0 the starting to point to 300 because the svg is 300 px wide
-    const xScale = scaleLinear()
-                    .domain([0,data.length-1])
+    //domain spliting the "bands by the number so 5 bands "
+    const xScale = scaleBand()
+                    .domain(data.map((value,index)=>index))
                     .range([0, 300])
+                    //padding to space the bars
+                    .padding(0.5)
     // domain going to 75 as its the largest value(top of chart), range is 150 bc svg height is 150px
     const yScale = scaleLinear()
-                    .domain([0,75])
+                    .domain([0,150])
                     .range([150, 0])
 
-  // .tick(*number*) to control number of ticks - tick format to control what goes in ticks 
-    const xAxis = axisBottom(xScale).ticks(6).tickFormat(index => index +1)
+
+    const colorScale = scaleLinear()
+                    .domain([75,100,150])
+                    .range(["green","orange","red"])
+                    //clamp will allow us to still return green or red values for domains outside of the numberlisted
+                    .clamp(true)
+
+
+
+
+    const xAxis = axisBottom(xScale).ticks(data.length)
 
 
 
@@ -35,9 +46,19 @@ function App() {
                       .x((value, index) => xScale(index))
                       .y(value => yScale(value))
                       .curve(curveCardinal);
-    //creating / placing the line based on the data array  d attribute it linefunction
-    svg.selectAll(".line").data([data]).join("path").attr("class", "line").attr("d", value => myLine(value)).attr("fill", "none").attr("stroke", "blue")
-
+    //x is used to place bar over ticks , y is to place them at the difference between chart height and them (aka on the bar line y=0)
+    svg.selectAll(".bar")
+      .data(data)
+      .join("rect")
+      .attr("class", "bar")
+      .attr("fill", colorScale)
+      //flip bars upside down, transform are from origin(top right corner of svg)
+      .style("transform", "scale(1,-1)")
+      .attr("x", (value,index) => xScale(index))
+      .attr("y", -150)
+      .attr("width", xScale.bandwidth())
+      .transition()
+      .attr("height", value=> 150 - yScale(value))
   },[data])
 
   return (
