@@ -4,7 +4,7 @@ import {select, line, curveCardinal, axisBottom, axisRight, scaleLinear} from 'd
 
 function App() {
   const svgRef = useRef()
-  const [data, setData] = useState([25,30,45,60,50, 60, 22, 50, 65,76,45])
+  const [data, setData] = useState([25,30,45,60,50, 60])
 
   useEffect(()=> {
     console.log(svgRef)
@@ -19,7 +19,10 @@ function App() {
                     .domain([0,75])
                     .range([150, 0])
 
-    const xAxis = axisBottom(xScale)
+  // .tick(*number*) to control number of ticks - tick format to control what goes in ticks 
+    const xAxis = axisBottom(xScale).ticks(6).tickFormat(index => index +1)
+
+
 
     //call the xaxis function with the select - transform moves x axis from top of svg to 150px below or the bottom
     svg.select(".x-axis").style("transform", "translateY(150px)").call(xAxis)
