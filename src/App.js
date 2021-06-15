@@ -51,14 +51,31 @@ function App() {
       .data(data)
       .join("rect")
       .attr("class", "bar")
-      .attr("fill", colorScale)
+
       //flip bars upside down, transform are from origin(top right corner of svg)
       .style("transform", "scale(1,-1)")
-      .attr("x", (value,index) => xScale(index))
+      .attr("x", (value, index) => xScale(index))
       .attr("y", -150)
       .attr("width", xScale.bandwidth())
-      .transition()
-      .attr("height", value=> 150 - yScale(value))
+      //
+      .on("mouseenter", (event, value) => {
+        const index = svg.selectAll(".bar").nodes().indexOf(event.target);
+                svg
+                  .selectAll(".tooltip")
+                  .data([value])
+                  .join((enter) => enter.append("text").attr("y", yScale(value) - 4))
+                  .attr("class", "tooltip")
+                  .text(value)
+                  .attr("x", xScale(index) + xScale.bandwidth() / 2)
+                  .attr("text-anchor", "middle")
+                  .transition()
+                  .attr("y", yScale(value) - 8)
+                  .attr("opacity", 1);
+              })
+       .on("mouseleave", () => svg.select(".tooltip").remove())
+       .transition()
+       .attr("fill", colorScale)
+       .attr("height", value=> 150 - yScale(value))
   },[data])
 
   return (
@@ -74,6 +91,9 @@ function App() {
     <button onClick={()=> setData(data.map(value => value + 5))}> Update Data
     </button>
     <button onClick={()=> setData(data.filter(value => value < 35))}> Filter Data
+    </button>
+    <button onClick={() => setData([...data, Math.round(Math.random() * 100)])}>
+    Add data
     </button>
     </React.Fragment>
   );
